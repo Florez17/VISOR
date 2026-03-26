@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoVisor — La Ceja (Ortofoto Remota)</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        body { margin:0; padding:0; font-family: sans-serif; background:#0f1117; color:#e2e8f0; }
+        #map { position:absolute; top:0; bottom:0; width:100%; background:#1a1f2e; }
+        
+        /* Panel de Control Flotante */
+        .control-panel {
+            position: absolute; top: 10px; left: 10px; z-index: 1000;
+            background: rgba(24, 28, 38, 0.9); padding: 15px;
+            border-radius: 10px; border: 1px solid #252b3b; width: 250px;
+        }
+        .control-panel h2 { font-size: 14px; margin: 0 0 10px 0; color: #34d399; text-transform: uppercase; }
+        .layer-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 12px; }
+        input[type="range"] { width: 100%; margin-top: 5px; cursor: pointer; }
+        .coords-box { position: absolute; bottom: 10px; right: 10px; z-index: 1000; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 5px; font-size: 11px; font-family: monospace; }
+        
+        /* Estilo Botón Consultar */
+        #btn-query {
+            width: 100%; margin-top: 10px; padding: 8px;
+            background: #3b82f6; color: white; border: none;
+            border-radius: 5px; cursor: pointer; font-weight: bold;
+        }
+        #btn-query.active { background: #ef4444; }
+    </style>
+</head>
+<body>
+
+<div class="control-panel">
+    <h2>Visor La Ceja</h2>
+    <div class="layer-row">
+        <input type="checkbox" id="chk-orto" checked>
+        <label for="chk-orto">Ortofoto (GeoServer Remoto)</label>
+    </div>
+    <div style="margin-top:10px;">
+        <label style="font-size: 11px; color: #94a3b8;">Opacidad:</label>
+        <input type="range" id="range-op" min="0" max="100" value="100">
+    </div>
+    <button id="btn-query">Activar Consulta</button>
+    <div id="info-box" style="margin-top:15px; font-size: 11px; color: #94a3b8; border-top: 1px solid #252b3b; padding-top: 10px; display:none;">
+        <strong>Atributos:</strong><br><span id="attr-content">Haga clic en el mapa</span>
+    </div>
+</div>
+
+<div class="coords-box" id="coords">0.00000, 0.00000</div>
+<div id="map"></div>
+
+<script>
+    // 1. Configuración del Mapa
+    const map = L.map('map').setView([5.9842, -75.4346], 14);
+
+    // 2. Mapas Base
+    const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    const satelite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: '© Esri'
+    });
+
+    // 3. Integración Capa WMS Remota (La que solicitaste)
+    const wmsOrtofoto = L.tileLayer.wms('https://geoserver.osorvilo.org/geoserver/plan/wms', {
+        layers: 'plan:orto05376laceja',
+        format: 'image/png',
+        transparent: true,
+        version: '1.1.0',
+        srs: 'EPSG:4326',
+        attribution: 'IGAC - GeoServer Remoto'
+    }).addTo(map);
+
+    // 4. Controles de Interfaz
+    document.getElementById('chk-orto').onchange = function(e) {
+        e.target.checked ? wmsOrtofoto.addTo(map) : map.removeLayer(wmsOrtofoto);
+    };
+
+    document.getElementById('range-op').oninput = function(e) {
+        wmsOrtofoto.setOpacity(e.target.value / 100);
+    };
+
+    map.on('mousemove', function(e) {
+        document.getElementById('coords').innerHTML = e.latlng.lat.toFixed(5) + ", " + e.latlng.lng.toFixed(5);
+    });
+
+    // 5. Lógica de Consulta (GetFeatureInfo)
+    let queryActive = false;
+    const btnQuery = document.getElementById('btn-query');
+    const infoBox = document.getElementById('info-box');
+    const attrContent = document.getElementById('attr-content');
+
+    btnQuery.onclick = function() {
+        queryActive = !queryActive;
+        this.classList.toggle('active');
+        this.innerHTML = queryActive ? "Desactivar Consulta" : "Activar Consulta";
+        map.getContainer().style.cursor = queryActive ? 'crosshair' : '';
+    };
+
+    map.on('click', function(e) {
+        if (!queryActive) return;
+
+        const size = map.getSize();
+        const point = map.latLngToContainerPoint(e.latlng, map.getZoom());
+        const bounds = map.getBounds();
+        const bbox = bounds.getWest() + "," + bounds.getSouth() + "," + bounds.getEast() + "," + bounds.getNorth();
+
+        const url = `https://geoserver.osorvilo.org/geoserver/plan/wms?` +
+                    `SERVICE=WMS&VERSION=1.1.1&REQUEST=GetFeatureInfo&` +
+                    `LAYERS=plan:orto05376laceja&QUERY_LAYERS=plan:orto05376laceja&` +
+                    `BBOX=${bbox}&FEATURE_COUNT=1&HEIGHT=${size.y}&WIDTH=${size.x}&` +
+                    `FORMAT=image/png&INFO_FORMAT=application/json&SRS=EPSG:4326&` +
+                    `X=${Math.round(point.x)}&Y=${Math.round(point.y)}`;
+
+        infoBox.style.display = 'block';
+        attrContent.innerHTML = "Consultando...";
+
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                if (data.features && data.features.length > 0) {
+                    const props = data.features.properties;
+                    let out = "<ul style='padding-left:15px; margin:5px 0;'>";
+                    for (let key in props) {
+                        out += `<li><strong>${key}:</strong> ${props[key]}</li>`;
+                    }
+                    out += "</ul>";
+                    attrContent.innerHTML = out;
+                } else {
+                    attrContent.innerHTML = "No hay datos en este punto.";
+                }
+            })
+            .catch(err => {
+                attrContent.innerHTML = "Error al consultar atributos.";
+                console.error(err);
+            });
+    });
+
+</script>
+
+</body>
+</html>
