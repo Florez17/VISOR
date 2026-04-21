@@ -160,7 +160,7 @@ const LAYERS_CONFIG = {
 
   /* ── GRUPO: Catastro ────────────────────────────────────────────── */
   predios_urbanos: {
-    geoserverLayer: 'laceja:predios_urbanos',
+    geoserverLayer: 'plan:Urbano',
     label: 'Predios Urbanos',
     group: 'catastro',
     defaultOpacity: 0.7,
