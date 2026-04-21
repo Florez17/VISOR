@@ -74,7 +74,34 @@
         <div class="sidebar-section">
           <h3 class="section-title"><i class="fa-solid fa-layer-group"></i> Capas Temáticas</h3>
           <p class="section-hint">Activa o desactiva las capas para visualizar la información del municipio.</p>
-
+<!--GROUP: Catastro -->
+          <div class="layer-group" id="group-catastro">
+            <div class="group-header" data-group="catastro">
+              <div class="group-title-row">
+                <div class="group-icon catastro-icon"><i class="fa-solid fa-house-chimney-crack"></i></div>
+                <span class="group-name">Catastro</span>
+              </div>
+              <div class="group-controls">
+                <label class="switch-master" title="Activar/Desactivar grupo">
+                  <input type="checkbox" class="group-master-toggle" data-group="catastro" />
+                  <span class="switch-slider"></span>
+                </label>
+                <i class="fa-solid fa-chevron-down group-chevron"></i>
+              </div>
+            </div>
+            <div class="group-layers" id="layers-catastro" style="display:none;">
+              <div class="layer-item">
+                <label class="layer-toggle">
+                  <input type="checkbox" class="layer-cb" data-layer="predios_urbanos" data-group="catastro" />
+                  <span class="layer-dot" style="background:#2980B9"></span>
+                  <span class="layer-name">Predios Urbanos</span>
+                </label>
+                <div class="layer-actions">
+                  <button class="layer-btn" onclick="openOpacityControl(this, 'predios_urbanos')"><i class="fa-solid fa-circle-half-stroke"></i></button>
+                  <button class="layer-btn" onclick="showLegend('predios_urbanos','Predios Urbanos')"><i class="fa-solid fa-list"></i></button>
+                  <button class="layer-btn info-btn" onclick="showLayerInfo('predios_urbanos')"><i class="fa-solid fa-info"></i></button>
+                </div>
+              </div>
           <!-- GROUP: Clasificación Suelo -->
           <div class="layer-group" id="group-clasificacion">
             <div class="group-header" data-group="clasificacion">
