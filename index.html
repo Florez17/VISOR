@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/png" href="logo.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GEO-CEJA · Geovisor Municipio de La Ceja</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <!-- Leaflet Fullscreen -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/4.0.0/Control.FullScreen.min.css" />
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════ HEADER ══════════════════════════════════════════ -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="logo-shield">
+      <img src="logo.png" alt="GEO-CEJA" style="width:30px;height:30px;object-fit:contain;" />
+      </div>
+      <!--<div class="logo-shield">
+        <i class="fa-solid fa-earth-americas"></i>
+      </div>-->
+      <div class="header-titles">
+        <span class="header-main">GEO-CEJA</span>
+        <span class="header-sub">Geovisor Municipio de La Ceja · Antioquia</span>
+      </div>
+    </div>
+    <div class="header-center">
+      <div class="header-badge">
+        <i class="fa-solid fa-map-location-dot"></i>
+        <span>Sistema de Información Geográfica Municipal</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="coord-display" id="coordDisplay">
+        <i class="fa-solid fa-crosshairs"></i>
+        <span id="coordText">Mover cursor sobre el mapa</span>
+      </div>
+      <button class="header-btn" id="btnHelp" title="Ayuda">
+        <i class="fa-solid fa-circle-question"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════ MAP CONTAINER ══════════════════════════════════ -->
+  <div class="app-body">
+
+    <!-- ── LEFT SIDEBAR (Layers + Info) ── -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-toggle" id="sidebarToggle" title="Ocultar/Mostrar panel">
+        <i class="fa-solid fa-chevron-left" id="toggleIcon"></i>
+      </div>
+
+      <div class="sidebar-content">
+
+        <!-- SEARCH BOX -->
+        <div class="sidebar-section search-section">
+          <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="searchInput" placeholder="Buscar dirección o lugar…" />
+            <button id="searchBtn"><i class="fa-solid fa-arrow-right"></i></button>
+          </div>
+        </div>
+
+        <!-- LAYER GROUPS -->
+        <div class="sidebar-section">
+          <h3 class="section-title"><i class="fa-solid fa-layer-group"></i> Capas Temáticas</h3>
+          <p class="section-hint">Activa o desactiva las capas para visualizar la información del municipio.</p>
+
+          <!-- GROUP: Clasificación Suelo -->
+          <div class="layer-group" id="group-clasificacion">
+            <div class="group-header" data-group="clasificacion">
+              <div class="group-title-row">
+                <div class="group-icon clasificacion-icon"><i class="fa-solid fa-map"></i></div>
+                <span class="group-name">Clasificación del Suelo</span>
+              </div>
+              <div class="group-controls">
+                <label class="switch-master" title="Activar/Desactivar grupo">
+                  <input type="checkbox" class="group-master-toggle" data-group="clasificacion" />
+                  <span class="switch-slider"></span>
+                </label>
+                <i class="fa-solid fa-chevron-down group-chevron"></i>
+              </div>
+            </div>
+            <div class="group-layers" id="layers-clasificacion">
+              <div class="layer-item">
+                <label class="layer-toggle">
+                  <input type="checkbox" class="layer-cb" data-layer="suelo_urbano" data-group="clasificacion" />
+                  <span class="layer-dot" style="background:#FF8C00"></span>
+                  <span class="layer-name">Suelo Urbano</span>
+                </label>
+                <div class="layer-actions">
+                  <button class="layer-btn" title="Transparencia" onclick="openOpacityControl(this, 'suelo_urbano')"><i class="fa-solid fa-circle-half-stroke"></i></button>
+                  <button class="layer-btn" title="Ver leyenda" onclick="showLegend('suelo_urbano', 'Suelo Urbano')"><i class="fa-solid fa-list"></i></button>
+                  <button class="layer-btn info-btn" title="Información" onclick="showLayerInfo('suelo_urbano')"><i class="fa-solid fa-info"></i></button>
+                </div>
+              </div>
+              <div class="layer-item">
+                <label class="layer-toggle">
+                  <input type="checkbox" class="layer-cb" data-layer="suelo_expansion" data-group="clasificacion" />
+                  <span class="layer-dot" style="background:#FF0000"></span>
+                  <span class="layer-name">Suelo de Expansión</span>
+                </label>
+                <div class="layer-actions">
+                  <button class="layer-btn" title="Transparencia" onclick="openOpacityControl(this, 'suelo_expansion')"><i class="fa-solid fa-circle-half-stroke"></i></button>
+                  <button class="layer-btn" title="Ver leyenda" onclick="showLegend('suelo_expansion', 'Suelo de Expansión')"><i class="fa-solid fa-list"></i></button>
+                  <button class="layer-btn info-btn" title="Información" onclick="showLayerInfo('suelo_expansion')"><i class="fa-solid fa-info"></i></button>
+                </div>
+              </div>
+              <div class="layer-item">
+                <label class="layer-toggle">
+                  <input type="checkbox" class="layer-cb" data-layer="suelo_rural" data-group="clasificacion" />
+                  <span class="layer-dot" style="background:#228B22"></span>
+                  <span class="layer-name">Suelo Rural</span>
+                </label>
+                <div class="layer-actions">
+                  <button class="layer-btn" title="Transparencia" onclick="openOpacityControl(this, 'suelo_rural')"><i class="fa-solid fa-circle-half-stroke"></i></button>
+                  <button class="layer-btn" title="Ver leyenda" onclick="showLegend('suelo_rural', 'Suelo Rural')"><i class="fa-solid fa-list"></i></button>
+                  <button class="layer-btn info-btn" title="Información" onclick="showLayerInfo('suelo_rural')"><i class="fa-solid fa-info"></i></button>
+                </div>
+              </div>
+              <!--<div class="layer-item">
+                <label class="layer-toggle">
+                  <input type="checkbox" class="layer-cb" data-layer="suelo_proteccion" data-group="clasificacion" />
+                  <span class="layer-dot" style="background:#1ABC9C"></span>
+                  <span class="layer-name">Suelo de Protección</span>
+                </label>
+                <div class="layer-actions">
+                  <button class="layer-btn" title="Transparencia" onclick="openOpacityControl(this, 'suelo_proteccion')"><i class="fa-solid fa-circle-half-stroke"></i></button>
+                  <button class="layer-btn" title="Ver leyenda" onclick="showLegend('suelo_proteccion', 'Suelo de Protección')"><i class="fa-solid fa-list"></i></button>
+                  <button class="layer-btn info-btn" title="Información" onclick="showLayerInfo('suelo_proteccion')"><i class="fa-solid fa-info"></i></button>
+                </div>
+              </div>-->
+            </div>
+          </div>
+
+          <!-- GROUP: Usos del Suelo -->
+<div class="layer-group" id="group-usos">
+  <div class="group-header" data-group="usos">
+    <div class="group-title-row">
+      <div class="group-icon usos-icon"><i class="fa-solid fa-city"></i></div>
+      <span class="group-name">Usos del Suelo</span>
+    </div>
+    <div class="group-controls">
+      <label class="switch-master" title="Activar/Desactivar grupo">
+        <input type="checkbox" class="group-master-toggle" data-group="usos" />
+        <span class="switch-slider"></span>
+      </label>
+      <i class="fa-solid fa-chevron-down group-chevron"></i>
+    </div>
+  </div>
+  <div class="group-layers" id="layers-usos" style="display:none;">
+
+    <!-- Capa única -->
+    <div class="layer-item">
+      <label class="layer-toggle">
+        <input type="checkbox" class="layer-cb" data-layer="uso_residencial" data-group="usos" />
+        <span class="layer-dot" style="background:#E8873A;"></span>
+        <span class="layer-name">Uso de Suelo Urbano</span>
+      </label>
+      <div class="layer-actions">
+        <button class="layer-btn" onclick="openOpacityControl(this, 'uso_residencial')"><i class="fa-solid fa-circle-half-stroke"></i></button>
+        <button class="layer-btn info-btn" onclick="showLayerInfo('uso_residencial')"><i class="fa-solid fa-info"></i></button>
+      </div>
+    </div>
+
+    <!-- Leyenda estática -->
+    <div class="static-legend">
+      <div class="legend-item"><span class="legend-swatch" style="background:#d73027;"></span>Corredores de Comercio y Servicios (CCS)</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:#ffffb2;"></span>Residencial 1</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:#fed976;"></span>Residencial 2</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:#feb24c;"></span>Residencial 3</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:#6a3d9a;"></span>Uso Social Obligado (Equipamientos)</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:#33a02c;"></span>Uso Social Obligado (Espacio Público)</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:#1f78b4;"></span>Zona de Comercio y Servicios Tipo 1 (ZCS-1)</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:#006837;"></span>Zonas Preservación</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:#66bd63;"></span>Zonas Restauración</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:#a6d96a;"></span>Zonas Uso Sostenible</div>
+    </div>
+
+  </div>
+</div>
+
+          <!-- GROUP: Amenazas y Riesgos 
+          <div class="layer-group" id="group-amenazas">
+            <div class="group-header" data-group="amenazas">
+              <div class="group-title-row">
+                <div class="group-icon amenazas-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                <span class="group-name">Amenazas y Riesgos</span>
+              </div>
+              <div class="group-controls">
+                <label class="switch-master" title="Activar/Desactivar grupo">
+                  <input type="checkbox" class="group-master-toggle" data-group="amenazas" />
+                  <span class="switch-slider"></span>
+                </label>
+                <i class="fa-solid fa-chevron-down group-chevron"></i>
+              </div>
+            </div>
+            <div class="group-layers" id="layers-amenazas" style="display:none;">
+              <div class="layer-item">
+                <label class="layer-toggle">
+                  <input type="checkbox" class="layer-cb" data-layer="amenaza_inundacion" data-group="amenazas" />
+                  <span class="layer-dot" style="background:#3498DB"></span>
+                  <span class="layer-name">Amenaza por Inundación</span>
+                </label>
+                <div class="layer-actions">
+                  <button class="layer-btn" onclick="openOpacityControl(this, 'amenaza_inundacion')"><i class="fa-solid fa-circle-half-stroke"></i></button>
+                  <button class="layer-btn" onclick="showLegend('amenaza_inundacion','Amenaza por Inundación')"><i class="fa-solid fa-list"></i></button>
+                  <button class="layer-btn info-btn" onclick="showLayerInfo('amenaza_inundacion')"><i class="fa-solid fa-info"></i></button>
+                </div>
+              </div>
+              <div class="layer-item">
+                <label class="layer-toggle">
+                  <input type="checkbox" class="layer-cb" data-layer="amenaza_remocion" data-group="amenazas" />
+                  <span class="layer-dot" style="background:#E74C3C"></span>
+                  <span class="layer-name">Amenaza por Remoción en Masa</span>
+                </label>
+                <div class="layer-actions">
+                  <button class="layer-btn" onclick="openOpacityControl(this, 'amenaza_remocion')"><i class="fa-solid fa-circle-half-stroke"></i></button>
+                  <button class="layer-btn" onclick="showLegend('amenaza_remocion','Amenaza Remoción en Masa')"><i class="fa-solid fa-list"></i></button>
+                  <button class="layer-btn info-btn" onclick="showLayerInfo('amenaza_remocion')"><i class="fa-solid fa-info"></i></button>
+                </div>
+              </div>
+              <div class="layer-item">
+                <label class="layer-toggle">
+                  <input type="checkbox" class="layer-cb" data-layer="riesgo_alto" data-group="amenazas" />
+                  <span class="layer-dot" style="background:#C0392B"></span>
+                  <span class="layer-name">Riesgo Alto</span>
+                </label>
+                <div class="layer-actions">
+                  <button class="layer-btn" onclick="openOpacityControl(this, 'riesgo_alto')"><i class="fa-solid fa-circle-half-stroke"></i></button>
+                  <button class="layer-btn" onclick="showLegend('riesgo_alto','Riesgo Alto')"><i class="fa-solid fa-list"></i></button>
+                  <button class="layer-btn info-btn" onclick="showLayerInfo('riesgo_alto')"><i class="fa-solid fa-info"></i></button>
+                </div>
+              </div>
+              <div class="layer-item">
+                <label class="layer-toggle">
+                  <input type="checkbox" class="layer-cb" data-layer="riesgo_medio" data-group="amenazas" />
+                  <span class="layer-dot" style="background:#F39C12"></span>
+                  <span class="layer-name">Riesgo Medio</span>
+                </label>
+                <div class="layer-actions">
+                  <button class="layer-btn" onclick="openOpacityControl(this, 'riesgo_medio')"><i class="fa-solid fa-circle-half-stroke"></i></button>
+                  <button class="layer-btn" onclick="showLegend('riesgo_medio','Riesgo Medio')"><i class="fa-solid fa-list"></i></button>
+                  <button class="layer-btn info-btn" onclick="showLayerInfo('riesgo_medio')"><i class="fa-solid fa-info"></i></button>
+                </div>
+              </div>
+              <div class="layer-item">
+                <label class="layer-toggle">
+                  <input type="checkbox" class="layer-cb" data-layer="zona_recuperacion" data-group="amenazas" />
+                  <span class="layer-dot" style="background:#F1C40F"></span>
+                  <span class="layer-name">Zona de Recuperación</span>
+                </label>
+                <div class="layer-actions">
+                  <button class="layer-btn" onclick="openOpacityControl(this, 'zona_recuperacion')"><i class="fa-solid fa-circle-half-stroke"></i></button>
+                  <button class="layer-btn" onclick="showLegend('zona_recuperacion','Zona de Recuperación')"><i class="fa-solid fa-list"></i></button>
+                  <button class="layer-btn info-btn" onclick="showLayerInfo('zona_recuperacion')"><i class="fa-solid fa-info"></i></button>
+                </div>
+              </div>
+            </div>
+          </div>-->
+
+          <!-- GROUP: Catastro 
+          <div class="layer-group" id="group-catastro">
+            <div class="group-header" data-group="catastro">
+              <div class="group-title-row">
+                <div class="group-icon catastro-icon"><i class="fa-solid fa-house-chimney-crack"></i></div>
+                <span class="group-name">Catastro</span>
+              </div>
+              <div class="group-controls">
+                <label class="switch-master" title="Activar/Desactivar grupo">
+                  <input type="checkbox" class="group-master-toggle" data-group="catastro" />
+                  <span class="switch-slider"></span>
+                </label>
+                <i class="fa-solid fa-chevron-down group-chevron"></i>
+              </div>
+            </div>
+            <div class="group-layers" id="layers-catastro" style="display:none;">
+              <div class="layer-item">
+                <label class="layer-toggle">
+                  <input type="checkbox" class="layer-cb" data-layer="predios_urbanos" data-group="catastro" />
+                  <span class="layer-dot" style="background:#2980B9"></span>
+                  <span class="layer-name">Predios Urbanos</span>
+                </label>
+                <div class="layer-actions">
+                  <button class="layer-btn" onclick="openOpacityControl(this, 'predios_urbanos')"><i class="fa-solid fa-circle-half-stroke"></i></button>
+                  <button class="layer-btn" onclick="showLegend('predios_urbanos','Predios Urbanos')"><i class="fa-solid fa-list"></i></button>
+                  <button class="layer-btn info-btn" onclick="showLayerInfo('predios_urbanos')"><i class="fa-solid fa-info"></i></button>
+                </div>
+              </div>
+              <div class="layer-item">
+                <label class="layer-toggle">
+                  <input type="checkbox" class="layer-cb" data-layer="predios_rurales" data-group="catastro" />
+                  <span class="layer-dot" style="background:#27AE60"></span>
+                  <span class="layer-name">Predios Rurales</span>
+                </label>
+                <div class="layer-actions">
+                  <button class="layer-btn" onclick="openOpacityControl(this, 'predios_rurales')"><i class="fa-solid fa-circle-half-stroke"></i></button>
+                  <button class="layer-btn" onclick="showLegend('predios_rurales','Predios Rurales')"><i class="fa-solid fa-list"></i></button>
+                  <button class="layer-btn info-btn" onclick="showLayerInfo('predios_rurales')"><i class="fa-solid fa-info"></i></button>
+                </div>
+              </div>
+              <div class="layer-item">
+                <label class="layer-toggle">
+                  <input type="checkbox" class="layer-cb" data-layer="manzanas_catastrales" data-group="catastro" />
+                  <span class="layer-dot" style="background:#95A5A6"></span>
+                  <span class="layer-name">Manzanas Catastrales</span>
+                </label>
+                <div class="layer-actions">
+                  <button class="layer-btn" onclick="openOpacityControl(this, 'manzanas_catastrales')"><i class="fa-solid fa-circle-half-stroke"></i></button>
+                  <button class="layer-btn" onclick="showLegend('manzanas_catastrales','Manzanas Catastrales')"><i class="fa-solid fa-list"></i></button>
+                  <button class="layer-btn info-btn" onclick="showLayerInfo('manzanas_catastrales')"><i class="fa-solid fa-info"></i></button>
+                </div>
+              </div>
+              <div class="layer-item">
+                <label class="layer-toggle">
+                  <input type="checkbox" class="layer-cb" data-layer="nomenclatura_vial" data-group="catastro" />
+                  <span class="layer-dot" style="background:#E67E22"></span>
+                  <span class="layer-name">Nomenclatura Vial</span>
+                </label>
+                <div class="layer-actions">
+                  <button class="layer-btn" onclick="openOpacityControl(this, 'nomenclatura_vial')"><i class="fa-solid fa-circle-half-stroke"></i></button>
+                  <button class="layer-btn" onclick="showLegend('nomenclatura_vial','Nomenclatura Vial')"><i class="fa-solid fa-list"></i></button>
+                  <button class="layer-btn info-btn" onclick="showLayerInfo('nomenclatura_vial')"><i class="fa-solid fa-info"></i></button>
+                </div>
+              </div>
+            </div>
+          </div>-->
+
+          <!-- ── AÑADIR MÁS GRUPOS: copia el bloque "layer-group" superior ── -->
+          <!-- ================================================================
+               CÓMO AGREGAR UN NUEVO GRUPO DE CAPAS:
+               1. Copia uno de los bloques <div class="layer-group"> de arriba.
+               2. Cambia el id a "group-TUNUEVOGRUPO" y data-group a "TUNUEVOGRUPO".
+               3. Ajusta el nombre, ícono y color del grupo.
+               4. Dentro del <div class="group-layers">, agrega tus capas WMS.
+               5. En js/layers.js, añade la configuración WMS en LAYERS_CONFIG.
+               ================================================================ -->
+
+        </div>
+
+        <!-- LAYER INFO PANEL -->
+        <div class="sidebar-section info-panel" id="layerInfoPanel">
+          <h3 class="section-title"><i class="fa-solid fa-circle-info"></i> Información de Capa</h3>
+          <div id="layerInfoContent">
+            <div class="info-placeholder">
+              <i class="fa-solid fa-hand-pointer"></i>
+              <p>Haz clic sobre el mapa o selecciona <i class="fa-solid fa-info"></i> en una capa para ver información detallada.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- SCALE BAR INFO -->
+        <div class="sidebar-section scale-info">
+          <h3 class="section-title"><i class="fa-solid fa-ruler"></i> Herramientas</h3>
+          <div class="tools-grid">
+           <!--  <button class="tool-btn" id="btnMeasureDist" title="Medir distancia">
+              <i class="fa-solid fa-ruler-horizontal"></i><span>Distancia</span>
+            </button>-->
+           <!--  <button class="tool-btn" id="btnMeasureArea" title="Medir área">
+              <i class="fa-solid fa-draw-polygon"></i><span>Área</span>
+            </button>-->
+            <button class="tool-btn" id="btnLocate" title="Mi ubicación">
+              <i class="fa-solid fa-location-crosshairs"></i><span>Mi Ubicación</span>
+            </button>
+            <button class="tool-btn" id="btnPrint" title="Imprimir mapa">
+              <i class="fa-solid fa-print"></i><span>Imprimir</span>
+            </button>
+          </div>
+        </div>
+
+      </div><!-- /sidebar-content -->
+    </aside>
+
+    <!-- ── MAP ── -->
+    <div id="map"></div>
+
+    <!-- ── BASEMAP SWITCHER (hover panel) ── -->
+    <div class="basemap-switcher" id="basemapSwitcher">
+      <div class="basemap-trigger">
+        <i class="fa-solid fa-map"></i>
+        <span>Mapa Base</span>
+      </div>
+      <div class="basemap-panel">
+        <p class="basemap-title">Seleccionar mapa base</p>
+        <div class="basemap-grid">
+          <div class="basemap-thumb active" data-basemap="osm" title="OpenStreetMap">
+            <img src="https://tile.openstreetmap.org/13/1907/2412.png" alt="OSM" onerror="this.style.background='#4A7F5C';this.innerHTML='🗺️'" />
+            <span>Calles</span>
+          </div>
+          <div class="basemap-thumb" data-basemap="satellite" title="Satélite Esri">
+            <img src="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/13/2412/1907" alt="Satellite" alt="Satellite" onerror="this.style.background='#1a3a2a';this.innerHTML='🛰️'" />
+            <span>Satélite</span>
+          </div>
+        <!--  <div class="basemap-thumb" data-basemap="topo" title="Topográfico">
+            <img src="img/thumb_topo.png" alt="Topo" onerror="this.style.background='#5a7a4a';this.innerHTML='⛰️'" />
+            <span>Topográfico</span>
+          </div>
+          <div class="basemap-thumb" data-basemap="dark" title="Modo oscuro">
+            <img src="img/thumb_dark.png" alt="Dark" onerror="this.style.background='#1a1a2e';this.innerHTML='🌙'" />
+            <span>Oscuro</span>
+          </div>
+          <div class="basemap-thumb" data-basemap="light" title="Claro">
+            <img src="img/thumb_light.png" alt="Light" onerror="this.style.background='#e8e8e8';this.innerHTML='☀️'" />
+            <span>Claro</span>
+          </div>
+          <div class="basemap-thumb" data-basemap="terrain" title="Terreno">
+            <img src="img/thumb_terrain.png" alt="Terrain" onerror="this.style.background='#7a9a6a';this.innerHTML='🌄'" />
+            <span>Terreno</span>
+          </div>
+          <div class="basemap-thumb" data-basemap="watercolor" title="Acuarela">
+            <img src="img/thumb_wc.png" alt="Watercolor" onerror="this.style.background='#6a8a9a';this.innerHTML='🎨'" />
+            <span>Acuarela</span>
+          </div>
+          <div class="basemap-thumb" data-basemap="none" title="Sin mapa base">
+            <div style="background:#2a2a2a;width:100%;height:50px;display:flex;align-items:center;justify-content:center;font-size:18px;">⬜</div>
+            <span>Sin fondo</span>
+          </div>-->
+        </div>
+      </div>
+    </div>
+
+    <!-- ── OPACITY FLOATING CONTROL ── -->
+    <div class="opacity-control" id="opacityControl" style="display:none;">
+      <div class="opacity-header">
+        <span id="opacityLayerName">Capa</span>
+        <button onclick="closeOpacityControl()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="opacity-slider-row">
+        <i class="fa-solid fa-eye-slash"></i>
+        <input type="range" id="opacitySlider" min="0" max="100" value="80" />
+        <i class="fa-solid fa-eye"></i>
+      </div>
+      <span class="opacity-value" id="opacityValue">80%</span>
+    </div>
+
+  </div><!-- /app-body -->
+
+  <!-- ═══════════════════════════════════════════ MODALS ══════════════════════════════════════════ -->
+
+  <!-- MODAL: Ayuda -->
+  <div class="modal-overlay" id="modalHelp">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2><i class="fa-solid fa-circle-question"></i> Guía de Uso</h2>
+        <button class="modal-close" onclick="closeModal('modalHelp')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="help-grid">
+          <div class="help-card"><i class="fa-solid fa-hand-pointer"></i><h4>Navegar</h4><p>Haz clic y arrastra para mover el mapa. Usa la rueda del ratón para acercar o alejar.</p></div>
+          <div class="help-card"><i class="fa-solid fa-layer-group"></i><h4>Capas</h4><p>Activa o desactiva capas temáticas desde el panel izquierdo.</p></div>
+          <div class="help-card"><i class="fa-solid fa-map"></i><h4>Mapa Base</h4><p>Cambia el fondo del mapa pasando el cursor sobre el panel "Mapa Base".</p></div>
+          <div class="help-card"><i class="fa-solid fa-info"></i><h4>Consultar</h4><p>Haz clic sobre el mapa con una capa activa para consultar información del elemento.</p></div>
+          <div class="help-card"><i class="fa-solid fa-ruler"></i><h4>Medir</h4><p>Usa las herramientas de medición para calcular distancias y áreas en el mapa.</p></div>
+          <div class="help-card"><i class="fa-solid fa-magnifying-glass"></i><h4>Buscar</h4><p>Escribe una dirección o lugar en el buscador para centrarte en esa ubicación.</p></div>
+        </div>
+        <div class="help-note">
+          <i class="fa-solid fa-circle-info"></i>
+          <p>GEO-CEJA es el Sistema de Información Geográfica del Municipio de La Ceja del Tambo, Antioquia. Para soporte técnico, contacta al Departamento Administrativo de Planeación.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Leyenda -->
+  <div class="modal-overlay" id="modalLegend">
+    <div class="modal-box modal-small">
+      <div class="modal-header">
+        <h2><i class="fa-solid fa-list"></i> <span id="legendTitle">Leyenda</span></h2>
+        <button class="modal-close" onclick="closeModal('modalLegend')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body" id="legendBody">
+        <div class="legend-loading"><i class="fa-solid fa-circle-notch fa-spin"></i> Cargando leyenda desde GeoServer…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div class="toast" id="toast">
+    <i class="fa-solid fa-circle-check"></i>
+    <span id="toastMsg">Mensaje</span>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ SCRIPTS ══════════════════════════════════════════ -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-image/0.4.0/leaflet-image.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/4.0.0/Control.FullScreen.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/layers.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/ui.js"></script>
+</body>
+</html>
